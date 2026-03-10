@@ -13,6 +13,10 @@ java {
 		languageVersion = JavaLanguageVersion.of(25)
 	}
 }
+bootJar {
+	archiveFileName = 'app.jar'
+}
+
 
 configurations {
 	compileOnly {

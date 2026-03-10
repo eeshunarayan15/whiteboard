@@ -1,4 +1,4 @@
-name: Deploy on AWS
+name: Deploy on Render
 on:
   push:
    branches: ["main"]
@@ -28,15 +28,7 @@ jobs:
        with:
         context: .
         push: true
-        tags: ${{ secrets.DOCKER_USERNAME }}/ecommerce-app:prod
-     - name: Configure Aws Credentials
-       uses: aws-actions/configure-aws-credentials@v2
-       with:
-         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-         aws-region: ${{ secrets.AWS_REGION }}
-     - name: Deploy to AWS by refreshing ASG
+        tags: ${{ secrets.DOCKER_USERNAME }}/whiteboard:latest
+     - name: Trigger Render Deploy
        run: |
-            aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
-            --preferences '{"MinHealthyPercentage": 50, "InstanceWarmup": 300}' --region ${{ secrets.AWS_REGION }}
+         curl -X POST ${{secrets.RENDER_DEPLOY_HOOK_URL}}
