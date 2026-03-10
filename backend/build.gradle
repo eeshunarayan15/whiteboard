@@ -1,0 +1,61 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.whiteboard'
+version = '0.0.1-SNAPSHOT'
+description = 'Demo project for Spring Boot'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// WebSocket + STOMP (we'll wire this up after REST)
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+	// Database
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'org.postgresql:postgresql'
+
+
+	// Validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+
+	// Lombok - reduces boilerplate
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// Security - dependency is here but NOT configured yet
+	// Uncomment when you're ready to integrate
+	// implementation 'org.springframework.boot:spring-boot-starter-security'
+	// implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+	// runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+	// runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
+
+
+	// Testing
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
