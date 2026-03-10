@@ -1,8 +1,9 @@
 import React from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import RootLayout from "./component/RootLayout";
-import Whiteboard from "./component/WhiteBoard";
+
 import Home from "./component/Home";
+import Whiteboard from "./component/Whiteboard";
 
 const App = () => {
   return (
