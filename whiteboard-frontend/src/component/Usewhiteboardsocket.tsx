@@ -21,9 +21,9 @@ export function useWhiteboardSocket(boardId: string | undefined) {
 
   useEffect(() => {
     if (!boardId) return;
-
+const wsUrl = import.meta.env.VITE_WS_URL || "";
     const client = new Client({
-      webSocketFactory: () => new SockJS("/ws"),
+      webSocketFactory: () => new SockJS(`${wsUrl}/ws`),
       reconnectDelay: 3000,
 
       onConnect: () => {
