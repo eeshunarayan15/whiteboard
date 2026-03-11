@@ -10,26 +10,33 @@ export default function Canvas({
 }) {
   const canvasRef = useRef(null);
 
-  const { onMouseDown, onMouseMove, onMouseUp, onMouseLeave } = useCanvas(
-    canvasRef,
-    {
-      color,
-      strokeWidth,
-      sendDrawEvent,
-      sendSegment,
-      sendCursor,
-    },
-  );
+const {
+  onMouseDown,
+  onMouseMove,
+  onMouseUp,
+  onMouseLeave,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+} = useCanvas(canvasRef, {
+  color,
+  strokeWidth,
+  sendDrawEvent,
+  sendSegment,
+  sendCursor,
+});
 
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full"
-      style={{ cursor: "crosshair" }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseLeave}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      style={{ touchAction: "none" }} // ← add this too
     />
   );
 }

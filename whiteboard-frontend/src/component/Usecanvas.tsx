@@ -61,6 +61,7 @@ export function useCanvas(
     resize();
     return () => observer.disconnect();
   }, []);
+
   // Listen for live segments from other users
   useEffect(() => {
     const handler = (e: any) => {
@@ -82,16 +83,34 @@ export function useCanvas(
     return () => window.removeEventListener("whiteboard-segment", handler);
   }, []);
 
+  // Prevent page scroll when drawing on touch devices
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const prevent = (e: TouchEvent) => e.preventDefault();
+    canvas.addEventListener("touchstart", prevent, { passive: false });
+    canvas.addEventListener("touchmove", prevent, { passive: false });
+    return () => {
+      canvas.removeEventListener("touchstart", prevent);
+      canvas.removeEventListener("touchmove", prevent);
+    };
+  }, []);
+
   const getPos = useCallback((e) => {
     const rect = canvasRef.current.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }, []);
 
-  const onMouseDown = useCallback(
-    (e) => {
+  const getTouchPos = useCallback((touch: Touch) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  }, []);
+
+  // --- Shared start/move/end logic ---
+  const startDrawing = useCallback(
+    (pos) => {
       isDrawing.current = true;
       currentElementId.current = crypto.randomUUID();
-      const pos = getPos(e);
       currentPoints.current = [pos];
       lastPos.current = pos;
       const ctx = canvasRef.current.getContext("2d");
@@ -102,35 +121,25 @@ export function useCanvas(
       ctx.lineJoin = "round";
       ctx.moveTo(pos.x, pos.y);
     },
-    [color, strokeWidth, getPos],
+    [color, strokeWidth],
   );
 
-  const onMouseMove = useCallback(
-    (e) => {
-      const pos = getPos(e);
-      const now = Date.now();
-
-      if (now - lastCursorSend.current > 30) {
-        sendCursor(pos.x, pos.y);
-        lastCursorSend.current = now;
-      }
-
+  const continueDrawing = useCallback(
+    (pos) => {
       if (!isDrawing.current) return;
-
       currentPoints.current.push(pos);
       const ctx = canvasRef.current.getContext("2d");
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
-      console.log("sendSegment:", typeof sendSegment, lastPos.current, pos);
       if (lastPos.current) {
         sendSegment(lastPos.current, pos, color, strokeWidth);
       }
       lastPos.current = pos;
     },
-    [getPos, sendCursor, sendSegment, color, strokeWidth],
+    [sendSegment, color, strokeWidth],
   );
 
-  const onMouseUp = useCallback(() => {
+  const stopDrawing = useCallback(() => {
     if (!isDrawing.current) return;
     isDrawing.current = false;
     lastPos.current = null;
@@ -144,9 +153,57 @@ export function useCanvas(
     currentPoints.current = [];
   }, [color, strokeWidth, sendDrawEvent]);
 
-  const onMouseLeave = useCallback(() => {
-    if (isDrawing.current) onMouseUp();
-  }, [onMouseUp]);
+  // --- Mouse events ---
+  const onMouseDown = useCallback(
+    (e) => startDrawing(getPos(e)),
+    [startDrawing, getPos],
+  );
 
-  return { onMouseDown, onMouseMove, onMouseUp, onMouseLeave };
+  const onMouseMove = useCallback(
+    (e) => {
+      const pos = getPos(e);
+      const now = Date.now();
+      if (now - lastCursorSend.current > 30) {
+        sendCursor(pos.x, pos.y);
+        lastCursorSend.current = now;
+      }
+      continueDrawing(pos);
+    },
+    [getPos, sendCursor, continueDrawing],
+  );
+
+  const onMouseUp = useCallback(() => stopDrawing(), [stopDrawing]);
+
+  const onMouseLeave = useCallback(() => {
+    if (isDrawing.current) stopDrawing();
+  }, [stopDrawing]);
+
+  // --- Touch events ---
+  const onTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (e.touches.length !== 1) return; // ignore multi-touch
+      startDrawing(getTouchPos(e.touches[0]));
+    },
+    [startDrawing, getTouchPos],
+  );
+
+  const onTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLCanvasElement>) => {
+      if (e.touches.length !== 1) return;
+      continueDrawing(getTouchPos(e.touches[0]));
+    },
+    [continueDrawing, getTouchPos],
+  );
+
+  const onTouchEnd = useCallback(() => stopDrawing(), [stopDrawing]);
+
+  return {
+    onMouseDown,
+    onMouseMove,
+    onMouseUp,
+    onMouseLeave,
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd,
+  };
 }
