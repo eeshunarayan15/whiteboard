@@ -36,7 +36,14 @@ const {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      style={{ touchAction: "none" }} // ← add this too
+      style={{
+        touchAction: "none",
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        top: 0,
+        left: 0,
+      }}
     />
   );
 }

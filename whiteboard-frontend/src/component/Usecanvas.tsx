@@ -109,6 +109,7 @@ export function useCanvas(
   // --- Shared start/move/end logic ---
   const startDrawing = useCallback(
     (pos) => {
+      console.log("startDrawing called", pos)
       isDrawing.current = true;
       currentElementId.current = crypto.randomUUID();
       currentPoints.current = [pos];
@@ -126,6 +127,7 @@ export function useCanvas(
 
   const continueDrawing = useCallback(
     (pos) => {
+        console.log("continueDrawing called", isDrawing.current, pos);
       if (!isDrawing.current) return;
       currentPoints.current.push(pos);
       const ctx = canvasRef.current.getContext("2d");
